@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.0.1",
     author="Hugh Dickinson",
     author_email="hugh.dickinson@open.ac.uk",
-    description="A small example package",
+    description="Python client for ESAP Data Discovery Shoipping Basket",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://git.astron.nl/astron-sdc/esap-userprofile-python-client",
