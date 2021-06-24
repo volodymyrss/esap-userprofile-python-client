@@ -34,7 +34,7 @@ class zooniverse:
         except PanoptesAPIException as e:
             return False
 
-    def generate(self, item, wait=False, **read_csv_args):
+    def generate(self, item, wait=False, convertToFrame=True, **read_csv_args):
         print("Generating requested export...")
         if wait:
             print("\t\tWaiting for generation to complete...")
@@ -44,20 +44,23 @@ class zooniverse:
             self._get_item_entry(item, "category"), generate=True, wait=wait
         )
         if response.ok:
-            return (
-                pd.read_csv(
-                    io.BytesIO(response.content),
-                    converters=zooniverse.category_converters[
-                        self._get_item_entry(item, "category")
-                    ],
+            if convertToFrame:
+                return (
+                    pd.read_csv(
+                        io.BytesIO(response.content),
+                        converters=zooniverse.category_converters[
+                            self._get_item_entry(item, "category")
+                        ],
+                    )
+                    if wait
+                    else response
                 )
-                if wait
-                else response
-            )
+            else:
+                return response
         else:
             return None
 
-    def retrieve(self, item, generate=False, wait=False, **read_csv_args):
+    def retrieve(self, item, generate=False, wait=False, convertToFrame=True, **read_csv_args):
         if self.is_available(item) and not generate:
             response = self._get_entity(item).get_export(
                 self._get_item_entry(item, "category"), generate=False, wait=wait
@@ -78,16 +81,19 @@ class zooniverse:
                     self._get_item_entry(item, "category"), generate=True, wait=wait
                 )
         if response.ok:
-            return (
-                pd.read_csv(
-                    io.BytesIO(response.content),
-                    converters=zooniverse.category_converters[
-                        self._get_item_entry(item, "category")
-                    ], **read_csv_args
+            if convertToFrame:
+                return (
+                    pd.read_csv(
+                        io.BytesIO(response.content),
+                        converters=zooniverse.category_converters[
+                            self._get_item_entry(item, "category")
+                        ],
+                    )
+                    if wait
+                    else response
                 )
-                if wait
-                else response
-            )
+            else:
+                return response
         else:
             return None
 
