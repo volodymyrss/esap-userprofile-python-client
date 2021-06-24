@@ -34,7 +34,7 @@ class zooniverse:
         except PanoptesAPIException as e:
             return False
 
-    def generate(self, item, wait=False):
+    def generate(self, item, wait=False, **read_csv_args):
         print("Generating requested export...")
         if wait:
             print("\t\tWaiting for generation to complete...")
@@ -57,7 +57,7 @@ class zooniverse:
         else:
             return None
 
-    def retrieve(self, item, generate=False, wait=False):
+    def retrieve(self, item, generate=False, wait=False, **read_csv_args):
         if self.is_available(item) and not generate:
             response = self._get_entity(item).get_export(
                 self._get_item_entry(item, "category"), generate=False, wait=wait
@@ -83,7 +83,7 @@ class zooniverse:
                     io.BytesIO(response.content),
                     converters=zooniverse.category_converters[
                         self._get_item_entry(item, "category")
-                    ],
+                    ], **read_csv_args
                 )
                 if wait
                 else response
