@@ -51,7 +51,7 @@ class zooniverse:
                         self._get_item_entry(item, "category")
                     ],
                 )
-                if not wait
+                if wait
                 else response
             )
         else:
