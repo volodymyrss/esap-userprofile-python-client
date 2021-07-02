@@ -4,6 +4,8 @@ import urllib.parse
 import getpass
 import pandas as pd
 
+from typing import Union, Optional
+
 
 class shopping_client:
 
