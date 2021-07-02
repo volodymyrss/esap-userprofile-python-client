@@ -9,6 +9,7 @@ from panoptes_client.panoptes import PanoptesAPIException
 
 class zooniverse:
 
+    name = "zooniverse"
     entity_types = {"workflow": Workflow, "project": Project}
     category_converters = {
         "subjects": dict(metadata=json.loads, locations=json.loads),
@@ -34,7 +35,7 @@ class zooniverse:
         except PanoptesAPIException as e:
             return False
 
-    def generate(self, item, wait=False, convertToFrame=True, **read_csv_args):
+    def generate(self, item, wait=False, convert_to_pandas=True, **read_csv_args):
         print("Generating requested export...")
         if wait:
             print("\t\tWaiting for generation to complete...")
@@ -44,7 +45,7 @@ class zooniverse:
             self._get_item_entry(item, "category"), generate=True, wait=wait
         )
         if response.ok:
-            if convertToFrame:
+            if convert_to_pandas:
                 return (
                     pd.read_csv(
                         io.BytesIO(response.content),
@@ -60,7 +61,9 @@ class zooniverse:
         else:
             return None
 
-    def retrieve(self, item, generate=False, wait=False, convertToFrame=True, **read_csv_args):
+    def retrieve(
+        self, item, generate=False, wait=False, convert_to_pandas=True, **read_csv_args
+    ):
         if self.is_available(item) and not generate:
             response = self._get_entity(item).get_export(
                 self._get_item_entry(item, "category"), generate=False, wait=wait
@@ -81,7 +84,7 @@ class zooniverse:
                     self._get_item_entry(item, "category"), generate=True, wait=wait
                 )
         if response.ok:
-            if convertToFrame:
+            if convert_to_pandas:
                 return (
                     pd.read_csv(
                         io.BytesIO(response.content),
@@ -109,3 +112,21 @@ class zooniverse:
 
     def _catalogue_to_id_string(self, item):
         return self._get_item_entry(item, "catalog") + "_id"
+
+    def _basket_item_to_pandas(self, basket_item, validate=True):
+        if validate:
+            item_data = self._validate_basket_item(basket_item, return_loaded=True)
+        else:
+            item_data = json.loads(basket_item["item_data"])
+        if item_data:
+            return pd.Series(item_data)
+        return None
+
+    def _validate_basket_item(self, basket_item, return_loaded=False):
+        item_data = json.loads(basket_item["item_data"])
+        if "archive" in item_data and item_data["archive"] == "zooniverse":
+            if return_loaded:
+                return item_data
+            else:
+                return True
+        return None
