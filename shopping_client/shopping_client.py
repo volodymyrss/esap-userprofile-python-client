@@ -38,7 +38,7 @@ class shopping_client:
 
     def get_basket(
         self, convert_to_pandas: bool = False, reload: bool = False
-    ) -> Union[list[dict], pd.DataFrame, None]:
+    ) -> Union[list, pd.DataFrame, None]:
         """Retrieve the shopping basket for a user.
         Prompts for access token if one was not supplied to constructor.
 
@@ -59,7 +59,7 @@ class shopping_client:
 
         Returns
         -------
-        Union[list[dict], pd.DataFrame, None]
+        Union[list, pd.DataFrame, None]
             Description of returned object.
 
         """
