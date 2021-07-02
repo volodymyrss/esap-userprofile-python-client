@@ -19,7 +19,7 @@ class shopping_client:
     def get_basket(self, convert_to_pandas=False, reload=False):
         if self.basket is None or reload:
             url = urllib.parse.urljoin(self.host, shopping_client.endpoint)
-            response = requests.get(url, dict(user_name=self.username))
+            response = requests.get(url, headers=self._request_header())
             if response.ok:
                 self.basket = json.loads(response.content)["results"][0][
                     "shopping_cart"
