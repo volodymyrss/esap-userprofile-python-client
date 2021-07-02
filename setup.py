@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="esap-userprofile-python-client",
-    version="0.0.1",
+    version="0.0.2",
     author="Hugh Dickinson",
     author_email="hugh.dickinson@open.ac.uk",
     description="Python client for ESAP Data Discovery Shoipping Basket",
