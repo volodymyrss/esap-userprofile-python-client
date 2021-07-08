@@ -147,7 +147,9 @@ class zooniverse:
         if response.ok:
             if convert_to_pandas:
                 return (
-                    self._chunked_content(item, response, chunk_size=chunk_size)
+                    self._chunked_content(
+                        item, response, chunk_size=chunk_size, **read_csv_args
+                    )
                     if chunked_retrieve
                     else pd.read_csv(
                         io.BytesIO(response.content),
@@ -166,18 +168,22 @@ class zooniverse:
         item: Union[dict, pd.Series],
         response: requests.Response,
         chunk_size: int = int(1e5),
+        **read_csv_args,
     ):
         response_iterator = response.iter_lines(1)
         chunk_frames = []
+        nrows = read_csv_args.pop("nrows", None)
+        skiprows = read_csv_args.pop("skiprows", 0)
+        _ = read_csv_args.pop("header", None)
+        names = read_csv_args.pop("names", None)
         while True:
             chunk = b"\n".join(
-                [
-                    line
-                    for _, line in zip(range(chunk_size), response_iterator)
-                    if line
-                ]
+                [line for _, line in zip(range(chunk_size), response_iterator) if line]
             )
-            if len(chunk) == 0:
+            if len(chunk) == 0 or (
+                nrows is not None
+                and len(chunk_frames) * chunk_size - 1 > nrows + skiprows
+            ):
                 # response_iterator exhausted
                 print("All data received.")
                 break
@@ -188,10 +194,20 @@ class zooniverse:
                         self._get_item_entry(item, "category")
                     ],
                     header=None if len(chunk_frames) else 0,
-                    names=chunk_frames[0].columns if len(chunk_frames) else None,
+                    names=chunk_frames[0].columns
+                    if len(chunk_frames)
+                    else names
+                    if names is not None
+                    else None,
+                    **read_csv_args,
                 )
             )
-        return pd.concat(chunk_frames, axis=0, ignore_index=True)
+        end = (skiprows + nrows) if nrows is not None else None
+        return (
+            pd.concat(chunk_frames, axis=0, ignore_index=True)
+            .iloc[slice(skiprows, end)]
+            .reset_index(drop=True)
+        )
 
     def _get_entity(self, item):
         entity = zooniverse.entity_types[self._get_item_entry(item, "catalog")].find(
