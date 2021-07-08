@@ -170,28 +170,27 @@ class zooniverse:
         response_iterator = response.iter_lines(1)
         chunk_frames = []
         while True:
-            try:
-                chunk = b"\n".join(
-                    [
-                        line
-                        for _, line in zip(range(chunk_size), response_iterator)
-                        if line
-                    ]
+            chunk = b"\n".join(
+                [
+                    line
+                    for _, line in zip(range(chunk_size), response_iterator)
+                    if line
+                ]
+            )
+            if len(chunk) == 0:
+                # response_iterator exhausted
+                print("All data received.")
+                break
+            chunk_frames.append(
+                pd.read_csv(
+                    io.BytesIO(chunk),
+                    converters=zooniverse.category_converters[
+                        self._get_item_entry(item, "category")
+                    ],
+                    header=None if len(chunk_frames) else 0,
+                    names=chunk_frames[0].columns if len(chunk_frames) else None,
                 )
-                if len(chunk) == 0:
-                    # response_iterator exhausted
-                    print("All data received.")
-                    break
-                chunk_frames.append(
-                    pd.read_csv(
-                        io.BytesIO(chunk),
-                        converters=zooniverse.category_converters[
-                            self._get_item_entry(item, "category")
-                        ],
-                        header=None if len(chunk_frames) else 0,
-                        names=chunk_frames[0].columns if len(chunk_frames) else None,
-                    )
-                )
+            )
         return pd.concat(chunk_frames, axis=0, ignore_index=True)
 
     def _get_entity(self, item):
