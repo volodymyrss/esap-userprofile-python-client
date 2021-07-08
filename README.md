@@ -4,6 +4,14 @@ A Python client for the ESCAPE ESAP User Profile REST API.
 
 The `shopping_client` module, which communicates with the ESCAPE ESAP User Profile REST API is very lightweight. Archive-specific functionality is delegated to "connector" modules like the `zooniverse` module.
 
+### Installation
+
+The client and the Zooniverse client cat be installed using pip:
+
+```sh
+$ pip install git+https://git.astron.nl/astron-sdc/esap-userprofile-python-client.git
+```
+
 ### Example - Using the Shopping Client with the Zooniverse connector
 
 ```python

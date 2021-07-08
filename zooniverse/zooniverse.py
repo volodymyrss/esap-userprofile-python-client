@@ -48,11 +48,7 @@ class zooniverse:
             return False
 
     def generate(
-        self,
-        item: Union[dict, pd.Series],
-        wait: bool = False,
-        convert_to_pandas: bool = True,
-        **read_csv_args
+        self, item: Union[dict, pd.Series], wait: bool = False, **read_csv_args
     ) -> Union[requests.Response, pd.DataFrame, None]:
         """Generate an export of data from the Zooniverse panoptes database
         specified by an item from the shopping basket.
@@ -64,8 +60,6 @@ class zooniverse:
             or a converted `pd.Series`.
         wait : bool
             If `True` blocks until the requested item has been generated.
-        convert_to_pandas : bool
-            If `True` the retrieved, generated data are parsed into a pd.DataFrame.
         **read_csv_args : type
             Extra arguments passed to `pd.read_csv()` when parsing the retrieved
             data.
@@ -84,20 +78,8 @@ class zooniverse:
         response = self._get_entity(item).get_export(
             self._get_item_entry(item, "category"), generate=True, wait=wait
         )
-        if response.ok:
-            if convert_to_pandas:
-                return (
-                    pd.read_csv(
-                        io.BytesIO(response.content),
-                        converters=zooniverse.category_converters[
-                            self._get_item_entry(item, "category")
-                        ],
-                    )
-                    if wait
-                    else response
-                )
-            else:
-                return response
+        if response.ok and wait:
+            return response
         else:
             return None
 
@@ -107,7 +89,9 @@ class zooniverse:
         generate: bool = False,
         wait: bool = False,
         convert_to_pandas: bool = True,
-        **read_csv_args
+        chunked_retrieve: bool = False,
+        chunk_size: int = int(1e5),
+        **read_csv_args,
     ) -> Union[requests.Response, pd.DataFrame, None]:
         """Retrieve data specified by an item from the shopping basket from the
         Zooniverse panoptes database. Optionally (re)generate the requested
@@ -128,6 +112,12 @@ class zooniverse:
             has no effect.
         convert_to_pandas : bool
             If `True` the retrieved data are parsed into a pd.DataFrame.
+        chunked_retrieve : bool
+            If `True` read the requested data objects in chunks to avoid
+            exhausting memory.
+        chunk_size : int
+            The number of lines of returned data in each chunk if
+            `chunked_retrieve` is `True`.
         **read_csv_args : type
             Extra arguments passed to `pd.read_csv()` when parsing the retrieved
             data.
@@ -150,29 +140,59 @@ class zooniverse:
                 return None
             else:
                 print("Generating requested export...")
-                if wait:
-                    print("\t\tWaiting for generation to complete...")
-                else:
-                    print("\t\tNot waiting for generation to complete...")
-                response = self._get_entity(item).get_export(
-                    self._get_item_entry(item, "category"), generate=True, wait=wait
-                )
+                response = self.generate(item, wait)
+        if response is None:
+            warning("No data immediately available. Returning NoneType")
+            return None
         if response.ok:
             if convert_to_pandas:
                 return (
-                    pd.read_csv(
+                    self._chunked_content(item, response, chunk_size=chunk_size)
+                    if chunked_retrieve
+                    else pd.read_csv(
                         io.BytesIO(response.content),
                         converters=zooniverse.category_converters[
                             self._get_item_entry(item, "category")
                         ],
                     )
-                    if wait
-                    else response
                 )
             else:
                 return response
         else:
             return None
+
+    def _chunked_content(
+        self,
+        item: Union[dict, pd.Series],
+        response: requests.Response,
+        chunk_size: int = int(1e5),
+    ):
+        response_iterator = response.iter_lines(1)
+        chunk_frames = []
+        while True:
+            try:
+                chunk = b"\n".join(
+                    [
+                        line
+                        for _, line in zip(range(chunk_size), response_iterator)
+                        if line
+                    ]
+                )
+                if len(chunk) == 0:
+                    # response_iterator exhausted
+                    print("All data received.")
+                    break
+                chunk_frames.append(
+                    pd.read_csv(
+                        io.BytesIO(chunk),
+                        converters=zooniverse.category_converters[
+                            self._get_item_entry(item, "category")
+                        ],
+                        header=None if len(chunk_frames) else 0,
+                        names=chunk_frames[0].columns if len(chunk_frames) else None,
+                    )
+                )
+        return pd.concat(chunk_frames, axis=0, ignore_index=True)
 
     def _get_entity(self, item):
         entity = zooniverse.entity_types[self._get_item_entry(item, "catalog")].find(
