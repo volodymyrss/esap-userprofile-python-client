@@ -13,6 +13,7 @@ from panoptes_client.panoptes import PanoptesAPIException
 class zooniverse:
 
     name = "zooniverse"
+    archive = "zooniverse"
     entity_types = {"workflow": Workflow, "project": Project}
     category_converters = {
         "subjects": dict(metadata=json.loads, locations=json.loads),

@@ -37,7 +37,7 @@ class shopping_client:
         self.basket = None
 
     def get_basket(
-        self, convert_to_pandas: bool = False, reload: bool = False
+        self, convert_to_pandas: bool = False, reload: bool = False, filter_archives: bool = False
     ) -> Union[list, pd.DataFrame, None]:
         """Retrieve the shopping basket for a user.
         Prompts for access token if one was not supplied to constructor.
@@ -57,6 +57,11 @@ class shopping_client:
             If `True` a fresh query is issued to the ESAP API to refresh the
             basket contents.
 
+        filter_archives : bool
+            If `True` then the items are checked for an 'archive' value.
+            If this archive matches the 'archive' property of the provided connector
+            then the item is handled further, otherwise it is ignored.
+
         Returns
         -------
         Union[list, pd.DataFrame, None]
@@ -72,8 +77,13 @@ class shopping_client:
                 ]
             else:
                 return None
+
+        if filter_archives:
+            self.basket = self._filter_on_archive()
+
         if convert_to_pandas:
             return self._basket_to_pandas()
+
         return self.basket
 
     def _request_header(self):
@@ -81,6 +91,21 @@ class shopping_client:
             self._get_token()
 
         return dict(Accept="application/json", Authorization=f"Bearer {self.token}")
+
+    # filter on items belonging to the provided connectors
+    def _filter_on_archive(self):
+        filtered_items = []
+        if len(self.connectors):
+
+            for item in self.basket:
+                item_data = json.loads(item["item_data"])
+
+                for connector in self.connectors:
+                    if "archive" in item_data and item_data["archive"] == connector.archive:
+                        filtered_items.append(item)
+
+        return filtered_items
+
 
     def _basket_to_pandas(self):
         if len(self.connectors):
