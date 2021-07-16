@@ -9,6 +9,7 @@ from typing import Union, Optional
 class alta_connector:
 
     name = "alta"
+    archive = "apertif"
 
     def basket_item_to_pandas(
             self, basket_item: Union[dict, pd.Series], validate: bool = True
@@ -67,7 +68,7 @@ class alta_connector:
 
         """
         item_data = json.loads(basket_item["item_data"])
-        if "archive" in item_data and item_data["archive"] == "apertif":
+        if "archive" in item_data and item_data["archive"] == self.archive:
             if return_loaded:
                 return item_data
             else:
