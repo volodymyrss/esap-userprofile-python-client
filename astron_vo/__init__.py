@@ -1,0 +1,1 @@
+from astron_vo.astron_vo_connector import astron_vo_connector
