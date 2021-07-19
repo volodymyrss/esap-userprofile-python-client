@@ -1,1 +1,1 @@
-from .alta_connector import alta_connector
+from alta.alta_connector import alta_connector
