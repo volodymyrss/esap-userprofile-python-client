@@ -5,6 +5,7 @@ import getpass
 import pandas as pd
 
 from typing import Union, Optional
+from warnings import warn
 
 from panoptes_client import Panoptes, Project, Workflow
 from panoptes_client.panoptes import PanoptesAPIException
@@ -135,7 +136,7 @@ class zooniverse:
             )
         else:
             if not generate:
-                warning(
+                warn(
                     "Requested resource is not available and you have specified generate==False"
                 )
                 return None
@@ -143,7 +144,7 @@ class zooniverse:
                 print("Generating requested export...")
                 response = self.generate(item, wait)
         if response is None:
-            warning("No data immediately available. Returning NoneType")
+            warn("No data immediately available. Returning NoneType")
             return None
         if response.ok:
             if convert_to_pandas:
