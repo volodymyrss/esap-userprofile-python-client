@@ -76,7 +76,7 @@ class shopping_client:
                     "shopping_cart"
                 ]
             else:
-                return None
+                warn(f"Unable to load data from {self.host}; is your key valid?")
 
         if filter_archives:
             self.basket = self._filter_on_archive()
