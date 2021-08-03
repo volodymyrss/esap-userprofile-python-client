@@ -5,6 +5,7 @@ import getpass
 import pandas as pd
 
 from typing import Union, Optional
+from warnings import warn
 
 
 class shopping_client:
@@ -124,7 +125,7 @@ class shopping_client:
                 name: data.to_frame().T if data.ndim < 2 else data.T
                 for name, data in converted_basket.items()
             }
-        warning(
+        warn(
             "No archive connectors specified - could not convert any basket items to Pandas DataFrame"
         )
         return self.basket
