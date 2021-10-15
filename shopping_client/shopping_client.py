@@ -1,11 +1,12 @@
-import requests
+import getpass
 import json
 import urllib.parse
-import getpass
-import pandas as pd
-
-from typing import Union, Optional
+from typing import Optional, Union
 from warnings import warn
+from os import getenv
+
+import pandas as pd
+import requests
 
 
 class shopping_client:
@@ -131,4 +132,10 @@ class shopping_client:
         return self.basket
 
     def _get_token(self):
-        self.token = getpass.getpass("Enter your ESAP access token:")
+        # Try to get token from Rucio OIDC file (when running in CERN DLaaS notebook)
+        token_fn = getenv("RUCIO_OIDC_FILE_NAME")
+        if token_fn is not None:
+            with open(token_fn) as token_file:
+                self.token = token_file.readline()
+        else:
+            self.token = getpass.getpass("Enter your ESAP access token:")
