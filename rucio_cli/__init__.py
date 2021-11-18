@@ -1,0 +1,1 @@
+from rucio_cli.rucio_connector import rucio_connector
