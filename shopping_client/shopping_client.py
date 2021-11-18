@@ -1,9 +1,11 @@
+import base64
 import getpass
 import json
+import time
 import urllib.parse
+from os import getenv
 from typing import Optional, Union
 from warnings import warn
-from os import getenv
 
 import pandas as pd
 import requests
@@ -15,7 +17,7 @@ class shopping_client:
 
     def __init__(
         self,
-        token: str = None,
+        token: Optional[str] = None,
         host: str = "http://localhost:5555/",
         connectors: list = [],
     ):
@@ -88,8 +90,20 @@ class shopping_client:
 
         return self.basket
 
+    def _is_valid_token(token: Optional[str]) -> bool:
+        """ Checks expiry of the token """
+
+        if token is None:
+            return False
+
+        try:
+            payload = json.loads(base64.b64decode(token.split(".")[1]))
+            return payload["exp"] > int(time.time()) + 10
+        except KeyError:
+            raise RuntimeError("Invalid JWT format")
+
     def _request_header(self):
-        while self.token is None:
+        while not self._is_valid_token(self.token):
             self._get_token()
 
         return dict(Accept="application/json", Authorization=f"Bearer {self.token}")
@@ -139,3 +153,6 @@ class shopping_client:
                 self.token = token_file.readline()
         else:
             self.token = getpass.getpass("Enter your ESAP access token:")
+
+        if self.token is None:
+            raise RuntimeError("No token found!")
