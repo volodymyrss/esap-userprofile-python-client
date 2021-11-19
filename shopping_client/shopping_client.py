@@ -104,7 +104,9 @@ class shopping_client:
             return False
 
         try:
-            payload = json.loads(base64.urlsafe_b64decode(token.split(".")[1]))
+            data = token.split(".")[1]
+            padded = data + "=" * divmod(len(token), 4)[1]
+            payload = json.loads(base64.urlsafe_b64decode(padded))
             return payload["exp"] > int(time.time()) + 10
         except KeyError:
             raise RuntimeError("Invalid JWT format")
@@ -168,7 +170,7 @@ class shopping_client:
                     f"{jh_api_uri}/user",
                     headers={"Authorization": f"token {jh_api_token}"},
                 )
-                
+
                 self.token = res.json()["auth_state"]["exchanged_tokens"][self.audience]
 
         except KeyError:
