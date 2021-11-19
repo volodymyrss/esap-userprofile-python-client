@@ -105,7 +105,7 @@ class shopping_client:
 
         try:
             data = token.split(".")[1]
-            padded = data + "=" * divmod(len(token), 4)[1]
+            padded = data + "=" * divmod(len(data), 4)[1]
             payload = json.loads(base64.urlsafe_b64decode(padded))
             return payload["exp"] > int(time.time()) + 10
         except KeyError:
