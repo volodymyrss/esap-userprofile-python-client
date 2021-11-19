@@ -90,7 +90,7 @@ class shopping_client:
 
         return self.basket
 
-    def _is_valid_token(token: Optional[str]) -> bool:
+    def _is_valid_token(self, token: Optional[str]) -> bool:
         """ Checks expiry of the token """
 
         if token is None:
