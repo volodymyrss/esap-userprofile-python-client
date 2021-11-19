@@ -104,7 +104,7 @@ class shopping_client:
             return False
 
         try:
-            payload = json.loads(base64.b64decode(token.split(".")[1]))
+            payload = json.loads(base64.urlsafe_b64decode(token.split(".")[1]))
             return payload["exp"] > int(time.time()) + 10
         except KeyError:
             raise RuntimeError("Invalid JWT format")
