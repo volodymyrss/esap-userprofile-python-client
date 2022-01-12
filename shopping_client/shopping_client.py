@@ -150,7 +150,10 @@ class shopping_client:
                 if len(items):
                     converted_basket[connector.name] = pd.concat(items, axis=1)
                 else:
-                    warn(f"Connector {connector.name} specified but no data found for it in shopping basket. Result will not contain an entry named {connector.name}.")
+                    warn(
+                        f"Connector {connector.name} specified but no data found for it "
+                        f"in shopping basket. Result will not contain an entry named {connector.name}."
+                        )
 
             return {
                 name: data.to_frame().T if data.ndim < 2 else data.T
