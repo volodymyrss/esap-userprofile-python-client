@@ -136,21 +136,30 @@ class shopping_client:
 
     def _basket_to_pandas(self):
         if len(self.connectors):
-            converted_basket = {
-                connector.name: pd.concat(
-                    [
-                        connector.basket_item_to_pandas(item)
-                        for item in self.basket
-                        if connector.validate_basket_item(item)
-                    ],
-                    axis=1,
-                )
-                for connector in self.connectors
-            }
+
+            converted_basket = {}
+
+            for connector in self.connectors:
+
+                items = [
+                    connector.basket_item_to_pandas(item)
+                    for item in self.basket
+                    if connector.validate_basket_item(item)
+                ]
+
+                if len(items):
+                    converted_basket[connector.name] = pd.concat(items, axis=1)
+                else:
+                    warn(
+                        f"Connector {connector.name} specified but no data found for it "
+                        f"in shopping basket. Result will not contain an entry named {connector.name}."
+                        )
+
             return {
                 name: data.to_frame().T if data.ndim < 2 else data.T
                 for name, data in converted_basket.items()
             }
+            
         warn(
             "No archive connectors specified - could not convert any basket items to Pandas DataFrame"
         )
