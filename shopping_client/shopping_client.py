@@ -19,11 +19,14 @@ class shopping_client:
     endpoint = "esap-api/accounts/user-profiles/"
     audience = "rucio"  # Audience used by ESAP, might be configurable later
 
+    client_validate_token = True
+
     def __init__(
         self,
         token: Optional[str] = None,
         host: str = "http://localhost:5555/",
         connectors: list = [],
+        client_validate_token: bool = True
     ):
         """Constructor.
 
@@ -41,6 +44,7 @@ class shopping_client:
         self.token = token
         self.host = host
         self.connectors = connectors
+        self.client_validate_token = client_validate_token
 
         self.basket = None
 
@@ -112,8 +116,9 @@ class shopping_client:
             raise RuntimeError("Invalid JWT format")
 
     def _request_header(self):
-        while not self._is_valid_token(self.token):
-            self._get_token()
+        if self.client_validate_token:
+            while not self._is_valid_token(self.token):
+                self._get_token()
 
         return dict(Accept="application/json", Authorization=f"Bearer {self.token}")
 
